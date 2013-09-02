@@ -11,3 +11,5 @@ service will install / un-install, start / stop, and run a program as a service 
 Currently supports Windows XP+, Linux/Upstart, and OSX/Launchd.
 
 These packages originate from Daniel Theophanes. His code can be found at https://bitbucket.org/kardianos. I have extended the code.
+
+[Click To View Documentation](http://godoc.org/github.com/goinggo/service/v1)
