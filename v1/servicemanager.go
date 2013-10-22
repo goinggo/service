@@ -12,29 +12,24 @@ import (
 // Blocks until program completes. Is intended to handle the standard
 // simple cases for running a service.
 func (config *Config) Run() {
-
-	service, err := _NewService(config)
+	service, err := newService(config)
 
 	if err != nil {
-
 		fmt.Printf("%s unable to start: %s", config.DisplayName, err)
 		return
 	}
 
-	config._Service = service
+	config.service = service
 
 	// Perform a command and then return
 	if len(os.Args) > 1 {
-
 		verb := os.Args[1]
 
 		switch verb {
-
 		case "install":
 			err = service.Install(config)
 
 			if err != nil {
-
 				fmt.Printf("Failed to install: %s\n", err)
 				return
 			}
@@ -46,7 +41,6 @@ func (config *Config) Run() {
 			err = service.Remove()
 
 			if err != nil {
-
 				fmt.Printf("Failed to remove: %s\n", err)
 				return
 			}
@@ -55,11 +49,9 @@ func (config *Config) Run() {
 			return
 
 		case "debug":
-
 			err = config.Start()
 
 			if err != nil {
-
 				fmt.Printf("Error Starting Service : %s", err)
 				return
 			}
@@ -79,7 +71,6 @@ func (config *Config) Run() {
 			err = service.Start()
 
 			if err != nil {
-
 				fmt.Printf("Failed to start: %s\n", err)
 				return
 			}
@@ -91,7 +82,6 @@ func (config *Config) Run() {
 			err = service.Stop()
 
 			if err != nil {
-
 				fmt.Printf("Failed to stop: %s\n", err)
 				return
 			}
@@ -100,7 +90,6 @@ func (config *Config) Run() {
 			return
 
 		default:
-
 			fmt.Printf("Options for \"%s\": (install | remove | debug | start | stop)\n", os.Args[0])
 			return
 		}

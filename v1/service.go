@@ -99,14 +99,13 @@ type Config struct {
 	Start func() error // Called when the service starts. IT MUST NOT BLOCK
 	Stop  func() error // Called when the service stops. IT MUST NOT BLOCK
 
-	_Service Service // A reference to the service object
+	service Service // A reference to the service object
 }
 
 //** INTERFACES
 
 // Installer implements the way to install and remove the service from the target OS
 type Installer interface {
-
 	// Installs this service on the system.  May return an
 	// error if this service is already installed.
 	Install(config *Config) error
@@ -118,7 +117,6 @@ type Installer interface {
 
 // Controller implements the way to self start and stop the service
 type Controller interface {
-
 	// Starts this service on the system
 	Start() error
 
@@ -128,7 +126,6 @@ type Controller interface {
 
 // Runner allows the program to run as a service
 type Runner interface {
-
 	// Run the program as a service
 	Run(config *Config) error
 }

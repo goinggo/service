@@ -6,24 +6,22 @@ import (
 	"os/exec"
 	"os/signal"
 	"strconv"
-	"syscall"
 	"text/template"
 )
 
 //** NEW TYPES
 
-// _LinuxUpstartService implements the Service interface
-type _LinuxUpstartService struct {
-	_Config *Config
+// linuxUpstartService implements the Service interface
+type linuxUpstartService struct {
+	config *Config
 }
 
 //** PUBLIC MEMBER FUNCTIONS
 
 // Install will create the necessary upstart conf file in the correct location
 //  config: The configuration for the service
-func (service *_LinuxUpstartService) Install(config *Config) error {
-
-	confPath := service._GetServiceFilePath()
+func (service *linuxUpstartService) Install(config *Config) error {
+	confPath := service.getServiceFilePath()
 
 	_, err := os.Stat(confPath)
 	if err == nil {
@@ -43,49 +41,43 @@ func (service *_LinuxUpstartService) Install(config *Config) error {
 		DisplayName      string
 		LongDescription  string
 	}{
-		service._Config.ExecutableName,
-		service._Config.WorkingDirectory,
-		service._Config.Name,
-		service._Config.DisplayName,
-		service._Config.LongDescription,
+		service.config.ExecutableName,
+		service.config.WorkingDirectory,
+		service.config.Name,
+		service.config.DisplayName,
+		service.config.LongDescription,
 	}
 
-	template := template.Must(template.New("upstartScript").Parse(_InstallScript()))
+	template := template.Must(template.New("upstartScript").Parse(installScript()))
 	return template.Execute(file, parameters)
 }
 
 // Remove uninstalls the service by removing the upstart conf file
-func (service *_LinuxUpstartService) Remove() error {
-
-	confPath := service._GetServiceFilePath()
+func (service *linuxUpstartService) Remove() error {
+	confPath := service.getServiceFilePath()
 
 	return os.Remove(confPath)
 }
 
 // Start will execute the proper start command to start the service as a daemon
-func (service *_LinuxUpstartService) Start() error {
-
-	cmd := exec.Command("start", service._Config.Name)
+func (service *linuxUpstartService) Start() error {
+	cmd := exec.Command("start", service.config.Name)
 
 	return cmd.Run()
 }
 
 // Stop will execute the proper upstart command to stop the running service
-func (service *_LinuxUpstartService) Stop() error {
-
-	cmd := exec.Command("stop", service._Config.Name)
+func (service *linuxUpstartService) Stop() error {
+	cmd := exec.Command("stop", service.config.Name)
 
 	return cmd.Run()
 }
 
 // Run will start the service and hook into the OS and block. On a
 // termination request by the OS it will call Stop and return
-func (service *_LinuxUpstartService) Run(config *Config) (err error) {
-
+func (service *linuxUpstartService) Run(config *Config) (err error) {
 	defer func() {
-
 		if r := recover(); r != nil {
-
 			fmt.Printf("******> SERVICE PANIC: %s\n", r)
 		}
 	}()
@@ -93,11 +85,9 @@ func (service *_LinuxUpstartService) Run(config *Config) (err error) {
 	fmt.Print("******> Initing Service\n")
 
 	if config.Init != nil {
-
 		err = config.Init()
 
 		if err != nil {
-
 			return err
 		}
 	}
@@ -105,11 +95,9 @@ func (service *_LinuxUpstartService) Run(config *Config) (err error) {
 	fmt.Print("******> Starting Service\n")
 
 	if config.Start != nil {
-
 		err = config.Start()
 
 		if err != nil {
-
 			return err
 		}
 	}
@@ -123,7 +111,6 @@ func (service *_LinuxUpstartService) Run(config *Config) (err error) {
 	signal.Notify(sigChan)
 
 	for {
-
 		// Wait for an event
 		whatSig := <-sigChan
 
@@ -133,20 +120,13 @@ func (service *_LinuxUpstartService) Run(config *Config) (err error) {
 		fmt.Printf("******> OS Notification: %v : %#x\n", whatSig, sigAsInt)
 
 		// Did we get any of these termination events
-		if whatSig == syscall.SIGINT ||
-			whatSig == syscall.SIGKILL ||
-			whatSig == syscall.SIGQUIT ||
-			whatSig == syscall.SIGSTOP ||
-			whatSig == syscall.SIGTERM {
-
+		if whatSig == os.Interrupt {
 			fmt.Print("******> Service Shutting Down\n")
 
 			if config.Stop != nil {
-
 				err = config.Stop()
 
 				if err != nil {
-
 					return err
 				}
 			}
@@ -160,19 +140,17 @@ func (service *_LinuxUpstartService) Run(config *Config) (err error) {
 
 //** PRIVATE MEMBER METHODS
 
-// _GetServiceFilePath return the location for the launchd plist file
-func (service *_LinuxUpstartService) _GetServiceFilePath() string {
-
-	return fmt.Sprintf("/etc/init/%s.conf", service._Config.Name)
+// getServiceFilePath return the location for the launchd plist file
+func (service *linuxUpstartService) getServiceFilePath() string {
+	return fmt.Sprintf("/etc/init/%s.conf", service.config.Name)
 }
 
 //** PRIVATE METHODS
 
-// _NewService create a new instance of the Service object for the Mac OS
-func _NewService(config *Config) (service *_LinuxUpstartService, err error) {
-
-	service = &_LinuxUpstartService{
-		_Config: config,
+// newService create a new instance of the Service object for the Mac OS
+func newService(config *Config) (service *linuxUpstartService, err error) {
+	service = &linuxUpstartService{
+		config: config,
 	}
 
 	if err != nil {
@@ -182,10 +160,9 @@ func _NewService(config *Config) (service *_LinuxUpstartService, err error) {
 	return service, nil
 }
 
-// _InstallScript returns a template for the launchd plist script for the Mac OSX
+// installScript returns a template for the launchd plist script for the Mac OSX
 //  https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man5/launchd.plist.5.html
-func _InstallScript() (script string) {
-
+func installScript() (script string) {
 	return `#	{{.LongDescription}}
 description	{{.DisplayName}}
 
