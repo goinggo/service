@@ -27,13 +27,12 @@
 
 		import (
 			"fmt"
-			"Kardianos/service"
+			"github.com/goinggo/service/v1"
 			"path/filepath"
 		)
 
 		// main starts the application
 		func main() {
-
 			// Capture the working directory
 			workingDirectory, _ := filepath.Abs("")
 
@@ -57,19 +56,16 @@
 
 		// InitService is called by the ServiceManager when the server before the service is ready to start
 		func InitService() {
-
 			fmt.Printf("Service Inited")
 		}
 
 		// StartService is called by the ServiceManager when the server is ready to start
 		func StartService() {
-
 			fmt.Printf("Service Started\n")
 		}
 
 		// StopService is called by the ServiceManager when the server is ready to be shutdown
 		func StopService() {
-
 			fmt.Printf("Service Stopped\n")
 		}
 */

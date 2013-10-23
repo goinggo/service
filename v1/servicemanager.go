@@ -64,7 +64,6 @@ func (config *Config) Run() {
 			fmt.Println("Shutting Down")
 
 			config.Stop()
-
 			return
 
 		case "start":

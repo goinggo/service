@@ -106,36 +106,23 @@ func (service *linuxUpstartService) Run(config *Config) (err error) {
 
 	// Create a channel to talk with the OS
 	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
 
-	// Ask the OS to notify us about events
-	signal.Notify(sigChan)
+	// Wait for an event
+	<-sigChan
 
-	for {
-		// Wait for an event
-		whatSig := <-sigChan
+	fmt.Print("******> Service Shutting Down\n")
 
-		// Convert the signal to an integer so we can display the hex number
-		sigAsInt, _ := strconv.Atoi(fmt.Sprintf("%d", whatSig))
+	if config.Stop != nil {
+		err = config.Stop()
 
-		fmt.Printf("******> OS Notification: %v : %#x\n", whatSig, sigAsInt)
-
-		// Did we get any of these termination events
-		if whatSig == os.Interrupt {
-			fmt.Print("******> Service Shutting Down\n")
-
-			if config.Stop != nil {
-				err = config.Stop()
-
-				if err != nil {
-					return err
-				}
-			}
-
-			fmt.Print("******> Service Down\n")
-
+		if err != nil {
 			return err
 		}
 	}
+
+	fmt.Print("******> Service Down\n")
+	return err
 }
 
 //** PRIVATE MEMBER METHODS
